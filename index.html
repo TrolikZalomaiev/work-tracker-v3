@@ -16,49 +16,58 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
+            min-height: 100vh; 
             margin: 0; 
             background: var(--bg); 
         }
         .card { 
             background: white; 
-            padding: 2.5rem; 
+            padding: 2rem; 
             border-radius: 16px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            width: 100%; 
+            width: 90%; 
             max-width: 350px; 
             text-align: center;
         }
         h2 { color: #333; margin-bottom: 1.5rem; }
-        label { display: block; text-align: left; margin-bottom: 5px; color: #666; font-size: 14px; }
-        select, button { 
+        label { display: block; text-align: left; margin-top: 15px; margin-bottom: 5px; color: #666; font-size: 14px; font-weight: bold; }
+        
+        select, input, button { 
             width: 100%; 
             padding: 14px; 
-            margin: 10px 0; 
+            margin: 5px 0 15px 0; 
             border-radius: 10px; 
-            border: 1px solid #ddd; 
+            border: 2px solid #eee; 
             font-size: 16px; 
             outline: none;
+            box-sizing: border-box;
         }
-        select { background-color: #fff; cursor: pointer; }
+        
+        input[type="datetime-local"] {
+            border: 2px solid var(--primary);
+            background: #fdfdfd;
+            font-family: inherit;
+        }
+
         button { 
             cursor: pointer; 
             border: none; 
             font-weight: bold; 
             transition: transform 0.1s, opacity 0.2s; 
             color: white;
-            text-transform: uppercase;
+            margin-top: 5px;
+            letter-spacing: 1px;
         }
         button:active { transform: scale(0.98); }
         .btn-in { background-color: var(--success); }
         .btn-out { background-color: var(--danger); }
+        
         #status { 
             margin-top: 15px; 
             font-size: 14px; 
             min-height: 1.2em;
-            color: #555;
+            font-weight: 500;
         }
-        .loader { color: var(--primary); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -66,32 +75,52 @@
 <div class="card">
     <h2>⏱ Time Tracker</h2>
     
-    <label for="name">Select your name:</label>
+    <label>Employee Name:</label>
     <select id="name">
         <option value="Anatolii">Anatolii</option>
+        <option value="Kaisa">Kaisa</option>
         <option value="Fredrik">Fredrik</option>
-        <option value="Kasia">Kasia</option>
-        </select>
+    </select>
 
-    <button class="btn-in" onclick="sendData('Check In')">CHECK IN</button>
-    <button class="btn-out" onclick="sendData('Check Out')">CHECK OUT</button>
+    <label>Adjust Time (if needed):</label>
+    <input type="datetime-local" id="time-input">
+
+    <button class="btn-in" onclick="sendData('Check-In')">CHECK IN</button>
+    <button class="btn-out" onclick="sendData('Check-Out')">CHECK OUT</button>
     
     <div id="status"></div>
 </div>
 
 <script>
+    // Set current local time on page load
+    function setCurrentTime() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('time-input').value = now.toISOString().slice(0, 16);
+    }
+    
+    window.onload = setCurrentTime;
+
     async function sendData(type) {
         const name = document.getElementById('name').value;
+        const timeVal = document.getElementById('time-input').value;
         const statusEl = document.getElementById('status');
         
-        // !!! IMPORTANT: Replace with your Web App URL from Google Script
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwtFP1zpG-Q_jS5ntBzoQebwxVCV3jBUV0gGB1JT0R4-mIZE95_lG42KdtqB1Smb2Z6cQ/exec';
+        // PASTE YOUR URL HERE (Google Script or Baserow)
+        const scriptURL = 'ВСТАВЬ_СЮДА_СВОЮ_ССЫЛКУ';
 
-        statusEl.innerHTML = '<span class="loader">Sending data...</span>';
+        if (!timeVal) {
+            alert("Please select date and time");
+            return;
+        }
+
+        statusEl.style.color = "#4a90e2";
+        statusEl.innerText = "Sending data...";
         
         const data = {
             name: name,
-            type: type
+            type: type,
+            customTime: timeVal 
         };
 
         try {
@@ -99,34 +128,21 @@
                 method: 'POST',
                 mode: 'no-cors', 
                 cache: 'no-cache',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
 
             statusEl.style.color = "green";
-            statusEl.innerText = `Success! ${name}: ${type} recorded.`;
+            statusEl.innerText = `Success: ${type} for ${name}`;
             
-            setTimeout(() => { statusEl.innerText = ""; }, 5000);
+            // Refresh to current time after submission
+            setCurrentTime();
 
         } catch (error) {
-            console.error('Error!', error);
             statusEl.style.color = "red";
-            statusEl.innerText = "Connection error!";
+            statusEl.innerText = "Error! Check your connection.";
         }
     }
 </script>
 
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
